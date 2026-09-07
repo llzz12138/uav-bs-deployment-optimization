@@ -19,6 +19,18 @@ import sys
 AREA_SIZE = 1000.0      # 方形区域边长 (m)
 NUM_USERS = 20          # 地面用户数量
 
+# 信道仿真参数（供其他脚本复用）
+DEFAULT_PARAMS = {
+    "fc": 2e9,            # 载波频率 2 GHz
+    "B": 10e6,            # 带宽 10 MHz
+    "Pt_dBm": 20.0,       # 发射功率 20 dBm
+    "N0_dBmHz": -174.0,   # 噪声功率谱密度 -174 dBm/Hz
+    "a": 9.61,            # 环境参数 a
+    "b": 0.16,            # 环境参数 b
+    "eta_los": 1.0,       # LoS 额外损耗 (dB)
+    "eta_nlos": 20.0,     # NLoS 额外损耗 (dB)
+}
+
 
 def compute_total_rate(uav_pos, users, params):
     """
@@ -107,16 +119,7 @@ if __name__ == "__main__":
     users = rng.uniform(0.0, AREA_SIZE, size=(NUM_USERS, 2))
 
     # 2) 设置信道仿真参数
-    params = {
-        "fc": 2e9,            # 载波频率 2 GHz
-        "B": 10e6,            # 带宽 10 MHz
-        "Pt_dBm": 20.0,       # 发射功率 20 dBm
-        "N0_dBmHz": -174.0,   # 噪声功率谱密度 -174 dBm/Hz
-        "a": 9.61,            # 环境参数 a
-        "b": 0.16,            # 环境参数 b
-        "eta_los": 1.0,       # LoS 额外损耗 (dB)
-        "eta_nlos": 20.0,     # NLoS 额外损耗 (dB)
-    }
+    params = dict(DEFAULT_PARAMS)
 
     # 3) 随机选择无人机位置：x、y 在 [0, 1000]，高度 h 在 [50, 300]
     uav_pos = np.array([
