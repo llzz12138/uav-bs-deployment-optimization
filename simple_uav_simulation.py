@@ -32,9 +32,9 @@ DEFAULT_PARAMS = {
 }
 
 
-def compute_total_rate(uav_pos, users, params):
+def compute_user_rates(uav_pos, users, params):
     """
-    计算无人机位于 uav_pos 时所有用户的总速率。
+    计算无人机位于 uav_pos 时每个地面用户的速率。
 
     参数
     ----
@@ -54,8 +54,8 @@ def compute_total_rate(uav_pos, users, params):
 
     返回
     ----
-    total_rate : float
-        所有用户速率之和 (bps)。
+    rates : numpy.ndarray, shape (NUM_USERS,)
+        每个用户的速率 (bps)。
     """
     fc = params["fc"]                 # 载波频率 (Hz)
     B = params["B"]                   # 带宽 (Hz)
@@ -101,10 +101,30 @@ def compute_total_rate(uav_pos, users, params):
     gamma_db = Pt_dBm - pl - noise_power_dBm
     gamma_lin = 10.0 ** (gamma_db / 10.0)     # 转为线性信噪比
 
-    # 每个用户的香农速率（bps），再求和得到总速率
+    # 每个用户的香农速率（bps）
     rates = B * np.log2(1.0 + gamma_lin)
-    total_rate = float(np.sum(rates))
-    return total_rate
+    return rates
+
+
+def compute_total_rate(uav_pos, users, params):
+    """
+    计算无人机位于 uav_pos 时所有用户的总速率。
+
+    参数
+    ----
+    uav_pos : numpy.ndarray, shape (3,)
+        无人机三维坐标 (x, y, h)，单位 m。
+    users   : numpy.ndarray, shape (NUM_USERS, 2)
+        地面用户二维坐标 (x, y)，单位 m。
+    params  : dict
+        与 compute_user_rates 相同的信道参数。
+
+    返回
+    ----
+    total_rate : float
+        所有用户速率之和 (bps)。
+    """
+    return float(np.sum(compute_user_rates(uav_pos, users, params)))
 
 
 if __name__ == "__main__":
