@@ -40,6 +40,21 @@ def generate_users(seed=SEED):
     return rng.uniform(0.0, AREA_SIZE, size=(NUM_USERS, 2))
 
 
+def generate_random_deployment(rng, num_uavs=NUM_UAVS):
+    """
+    从给定随机数生成器抽取多无人机初始部署。
+
+    返回 shape (num_uavs, 3) 的数组，列为 (x, y, h)。
+    """
+    return np.column_stack(
+        [
+            rng.uniform(0.0, AREA_SIZE, num_uavs),
+            rng.uniform(0.0, AREA_SIZE, num_uavs),
+            rng.uniform(50.0, 300.0, num_uavs),
+        ]
+    )
+
+
 def assign_users_to_uavs(uav_positions, users, params):
     """
     每个用户选择速率最大的无人机接入。
@@ -161,13 +176,7 @@ if __name__ == "__main__":
     params = dict(DEFAULT_PARAMS)
 
     # 先用随机位置演示：3 架无人机 x、y 均匀随机，高度在 [50, 300] 内
-    uav_positions = np.column_stack(
-        [
-            rng.uniform(0.0, AREA_SIZE, NUM_UAVS),
-            rng.uniform(0.0, AREA_SIZE, NUM_UAVS),
-            rng.uniform(50.0, 300.0, NUM_UAVS),
-        ]
-    )
+    uav_positions = generate_random_deployment(rng)
 
     result = summarize_deployment(uav_positions, users, params)
 
