@@ -99,16 +99,12 @@ def update_user_positions(positions, velocities, rng, dt):
     return positions, velocities
 
 
-def simulate_dual_mobility(uav_position, users_initial, params):
+def generate_user_trajectory(users_initial):
     """
-    逐时隙仿真车辆级用户移动，并重新计算单无人机服务性能。
+    生成车辆级用户的移动轨迹（Gauss-Markov 模型）。
 
-    返回
-    ----
-    data : numpy.ndarray, shape (TIME_SLOTS, 6)
-        每行 = (时间, 总速率, Jain, 最低速率, 平均速率, 不满足门限用户数)。
-    trajectory : numpy.ndarray, shape (TIME_SLOTS + 1, NUM_USERS, 2)
-        每个时隙结束后的用户位置。
+    返回 shape (TIME_SLOTS + 1, NUM_USERS, 2) 的数组，
+    索引 0 为初始位置，索引 t 为第 t 个时隙结束时的位置。
     """
     rng = np.random.default_rng(MOBILITY_SEED)
     users = users_initial.copy()
@@ -116,17 +112,41 @@ def simulate_dual_mobility(uav_position, users_initial, params):
         rng, len(users), USER_SPEED_MIN, USER_SPEED_MAX
     )
 
-    uav_deployment = np.asarray(uav_position, dtype=float).reshape(1, 3)
-
     trajectory = np.zeros((TIME_SLOTS + 1, len(users), 2))
     trajectory[0] = users
-    records = []
 
     for t in range(1, TIME_SLOTS + 1):
         users, velocities = update_user_positions(
             users, velocities, rng, SLOT_DURATION
         )
-        result = summarize_deployment(uav_deployment, users, params)
+        trajectory[t] = users
+
+    return trajectory
+
+
+def evaluate_uav_trajectory(uav_trajectory, user_trajectory, params):
+    """
+    给定无人机轨迹与用户轨迹，逐时隙计算服务性能指标。
+
+    参数
+    ----
+    uav_trajectory  : numpy.ndarray, shape (TIME_SLOTS + 1, 3)
+        无人机在每个时隙的三维位置 (x, y, h)。
+    user_trajectory : numpy.ndarray, shape (TIME_SLOTS + 1, NUM_USERS, 2)
+        用户在每个时隙的位置。
+
+    返回
+    ----
+    records : numpy.ndarray, shape (TIME_SLOTS, 6)
+        每行 = (时间, 总速率, Jain, 最低速率, 平均速率, 不满足门限用户数)。
+    """
+    uav_trajectory = np.asarray(uav_trajectory, dtype=float)
+    records = []
+
+    for t in range(1, TIME_SLOTS + 1):
+        result = summarize_deployment(
+            uav_trajectory[t].reshape(1, 3), user_trajectory[t], params
+        )
         outage_users = int(np.sum(result["user_rates"] < RATE_THRESHOLD_BPS))
 
         records.append(
@@ -139,9 +159,23 @@ def simulate_dual_mobility(uav_position, users_initial, params):
                 outage_users,
             )
         )
-        trajectory[t] = users
 
-    return np.asarray(records, dtype=float), trajectory
+    return np.asarray(records, dtype=float)
+
+
+def simulate_dual_mobility(uav_position, users_initial, params):
+    """
+    固定单无人机在车辆级移动用户场景下的逐时隙仿真。
+
+    返回 (逐时隙指标, 用户轨迹)，保持与此前版本相同的调用接口。
+    """
+    user_trajectory = generate_user_trajectory(users_initial)
+    uav_trajectory = np.tile(
+        np.asarray(uav_position, dtype=float).reshape(1, 3),
+        (TIME_SLOTS + 1, 1),
+    )
+    records = evaluate_uav_trajectory(uav_trajectory, user_trajectory, params)
+    return records, user_trajectory
 
 
 def plot_results(data, trajectory, uav_position, users_initial,
