@@ -185,10 +185,12 @@ def summarize_strategy(records):
     }
 
 
-def plot_comparison(user_trajectory, trajectories, records_dict):
+def plot_comparison(user_trajectory, trajectories, records_dict,
+                    output_file=OUTPUT_PNG, scenario_title=""):
     """绘制轨迹、总速率、最低用户速率与速率分布的对比图。"""
     time_min = np.arange(1, TIME_SLOTS + 1) * SLOT_DURATION / 60.0
     colors = {"Fixed": "tab:blue", "Greedy": "tab:orange", "Optimized": "tab:red"}
+    suffix = " ({})".format(scenario_title) if scenario_title else ""
 
     fig, axes = plt.subplots(2, 2, figsize=(13.5, 10.5))
 
@@ -211,7 +213,7 @@ def plot_comparison(user_trajectory, trajectories, records_dict):
     ax.set_aspect("equal")
     ax.set_xlabel("x (m)")
     ax.set_ylabel("y (m)")
-    ax.set_title("User trajectories and UAV strategies")
+    ax.set_title("User trajectories and UAV strategies" + suffix)
     ax.legend(loc="upper right", fontsize=8)
 
     # 右上：总速率随时间变化
@@ -221,7 +223,7 @@ def plot_comparison(user_trajectory, trajectories, records_dict):
                 linewidth=1.2, label=name)
     ax.set_xlabel("Time (min)")
     ax.set_ylabel("Total rate (Gbps)")
-    ax.set_title("Total rate over time")
+    ax.set_title("Total rate over time" + suffix)
     ax.grid(alpha=0.3)
     ax.legend(fontsize=8)
 
@@ -232,7 +234,7 @@ def plot_comparison(user_trajectory, trajectories, records_dict):
                 linewidth=1.2, label=name)
     ax.set_xlabel("Time (min)")
     ax.set_ylabel("Min user rate (Mbps)")
-    ax.set_title("Worst-case user rate over time")
+    ax.set_title("Worst-case user rate over time" + suffix)
     ax.grid(alpha=0.3)
     ax.legend(fontsize=8)
 
@@ -244,11 +246,11 @@ def plot_comparison(user_trajectory, trajectories, records_dict):
         patch.set_facecolor(colors[name])
         patch.set_alpha(0.5)
     ax.set_ylabel("Total rate (Gbps)")
-    ax.set_title("Distribution of per-slot total rate")
+    ax.set_title("Distribution of per-slot total rate" + suffix)
     ax.grid(alpha=0.3, axis="y")
 
     fig.tight_layout()
-    fig.savefig(OUTPUT_PNG, dpi=150)
+    fig.savefig(output_file, dpi=150)
     plt.close(fig)
 
 
