@@ -115,6 +115,7 @@ UAV-BS 部署优化/
 ├── hotspot_trajectory_comparison.py    # 热点聚集移动场景下的轨迹对比
 ├── pareto_trajectory_optimization.py   # NSGA-II 多目标优化与 Pareto 前沿
 ├── model_validation.py                 # 信道与速率模型的一致性验证
+├── data_flow_demo.py                   # 从参数到结果数值的逐步计算演示
 ├── requirements.txt                    # 依赖清单
 ├── uav_rate_heatmap.png                # 静态部署热力图
 ├── multi_uav_scenario.png              # 多无人机接入示意图
@@ -143,6 +144,8 @@ python dual_mobility_simulation.py         # 双移动场景时间序列
 python trajectory_comparison.py            # 均匀用户：三种策略对比
 python hotspot_trajectory_comparison.py    # 热点用户：三种策略对比
 python pareto_trajectory_optimization.py   # 多目标优化与 Pareto 前沿
+python model_validation.py                 # 模型实现一致性验证（5 项检查）
+python data_flow_demo.py                   # 打印“一个数字是怎么算出来的”演示
 ```
 
 其中 `pareto_trajectory_optimization.py` 约需 15 秒，
