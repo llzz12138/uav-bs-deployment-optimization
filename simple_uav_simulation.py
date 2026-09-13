@@ -32,9 +32,9 @@ DEFAULT_PARAMS = {
 }
 
 
-def compute_user_rates(uav_pos, users, params):
+def compute_path_loss(uav_pos, users, params):
     """
-    计算无人机位于 uav_pos 时每个地面用户的速率。
+    计算每个用户与无人机之间的平均路径损耗与 LoS 概率。
 
     参数
     ----
@@ -54,13 +54,12 @@ def compute_user_rates(uav_pos, users, params):
 
     返回
     ----
-    rates : numpy.ndarray, shape (NUM_USERS,)
-        每个用户的速率 (bps)。
+    pl_db : numpy.ndarray, shape (NUM_USERS,)
+        平均路径损耗 (dB)。
+    p_los : numpy.ndarray, shape (NUM_USERS,)
+        视距概率，取值在 (0, 1) 之间。
     """
     fc = params["fc"]                 # 载波频率 (Hz)
-    B = params["B"]                   # 带宽 (Hz)
-    Pt_dBm = params["Pt_dBm"]         # 发射功率 (dBm)
-    N0_dBmHz = params["N0_dBmHz"]     # 噪声功率谱密度 (dBm/Hz)
     a = params["a"]                   # LoS 概率参数 a
     b = params["b"]                   # LoS 概率参数 b
     eta_los = params["eta_los"]       # LoS 额外损耗 (dB)
@@ -80,7 +79,6 @@ def compute_user_rates(uav_pos, users, params):
 
     # LoS 概率（Al-Hourani 等经典 A2G 模型）
     p_los = 1.0 / (1.0 + a * np.exp(-b * (theta_deg - a)))
-    p_nlos = 1.0 - p_los
 
     # 自由空间路径损耗基准项：20*log10(4*pi*fc*d/c)（dB）
     fspl = 20.0 * np.log10(4.0 * np.pi * fc * d_3d / c)
@@ -88,7 +86,34 @@ def compute_user_rates(uav_pos, users, params):
     # LoS / NLoS 平均路径损耗（dB）
     pl_los = fspl + eta_los
     pl_nlos = fspl + eta_nlos
-    pl = p_los * pl_los + p_nlos * pl_nlos
+    pl_db = p_los * pl_los + (1.0 - p_los) * pl_nlos
+
+    return pl_db, p_los
+
+
+def compute_user_rates(uav_pos, users, params):
+    """
+    计算无人机位于 uav_pos 时每个地面用户的速率。
+
+    参数
+    ----
+    uav_pos : numpy.ndarray, shape (3,)
+        无人机三维坐标 (x, y, h)，单位 m。
+    users   : numpy.ndarray, shape (NUM_USERS, 2)
+        地面用户二维坐标 (x, y)，单位 m。
+    params  : dict
+        与 compute_path_loss 相同的信道参数。
+
+    返回
+    ----
+    rates : numpy.ndarray, shape (NUM_USERS,)
+        每个用户的速率 (bps)。
+    """
+    B = params["B"]                   # 带宽 (Hz)
+    Pt_dBm = params["Pt_dBm"]         # 发射功率 (dBm)
+    N0_dBmHz = params["N0_dBmHz"]     # 噪声功率谱密度 (dBm/Hz)
+
+    pl_db, _ = compute_path_loss(uav_pos, users, params)
 
     # 噪声功率（dBm）：N0 + 10*log10(B)
     noise_power_dBm = N0_dBmHz + 10.0 * np.log10(B)
@@ -98,7 +123,7 @@ def compute_user_rates(uav_pos, users, params):
     # 说明：该式与把发射功率和噪声均转为线性功率后
     #   gamma = Pt_W / (N0_W_per_Hz * B * 10^(PL/10))
     # 在 dB 域完全等价，只是把 dBm -> W 的 -30 dB 换算统一消去。
-    gamma_db = Pt_dBm - pl - noise_power_dBm
+    gamma_db = Pt_dBm - pl_db - noise_power_dBm
     gamma_lin = 10.0 ** (gamma_db / 10.0)     # 转为线性信噪比
 
     # 每个用户的香农速率（bps）
