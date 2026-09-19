@@ -117,6 +117,12 @@ UAV-BS 部署优化/
 ├── model_validation.py                 # 信道与速率模型的一致性验证
 ├── data_flow_demo.py                   # 从参数到结果数值的逐步计算演示
 ├── requirements.txt                    # 依赖清单
+├── docs/                               # 文献综述、研究缺口、算法与实验计划
+│   ├── literature_review.md
+│   ├── research_gap_and_contributions.md
+│   ├── fairness_and_objectives.md
+│   ├── algorithm_and_model_plan.md
+│   └── experiment_plan.md
 ├── uav_rate_heatmap.png                # 静态部署热力图
 ├── multi_uav_scenario.png              # 多无人机接入示意图
 ├── dual_mobility_metrics.png           # 双移动场景指标时间序列
@@ -125,6 +131,14 @@ UAV-BS 部署优化/
 ├── pareto_front.png                    # 吞吐量–公平性 Pareto 前沿
 └── *.csv                               # 逐时隙指标与 Pareto 解集数据
 ```
+
+### 4.1 研究文档索引
+
+- [docs/literature_review.md](docs/literature_review.md)：16 篇文献的总结、对比表、研究缺口与七天阅读周报；
+- [docs/research_gap_and_contributions.md](docs/research_gap_and_contributions.md)：研究背景、场景需求清单、研究缺口声明、三条创新点与必引文献；
+- [docs/fairness_and_objectives.md](docs/fairness_and_objectives.md)：四类公平性目标的数学形式、加权 max-min 设计与应急优先级权重；
+- [docs/algorithm_and_model_plan.md](docs/algorithm_and_model_plan.md)：算法改进方案、评价指标、资源分配与能耗模型、多无人机扩展；
+- [docs/experiment_plan.md](docs/experiment_plan.md)：下周实验清单（蒙特卡洛、加权公平、敏感性、求解器无关性）与周报表单。
 
 ## 5. 快速开始
 
